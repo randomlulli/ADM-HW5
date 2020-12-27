@@ -1,3 +1,5 @@
+- Repo of Mert Manuel ad Luca
+
 # Homework 5 - Explore Wikipedia's hyperlinks network
 
 In this assignment we analyze the Wikipedia's articles network by applying graph algorithms.
