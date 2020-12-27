@@ -1,4 +1,4 @@
-- Repo of Mert Manuel ad Luca
+- Repo of Mert, Manuel and Luca
 
 # Homework 5 - Explore Wikipedia's hyperlinks network
 
