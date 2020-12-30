@@ -1,7 +1,7 @@
 import networkx as nx
 from collections import defaultdict
-
-from networkx.classes.function import neighbors
+import numpy as np
+import random
 
 graph = nx.DiGraph()
 # for each link in links add edge
@@ -27,12 +27,25 @@ for name, values in categories.items():
     for value in values:
         art_cat[value].append(name)
 
+# keep 1 cat per node
+page_category = { page : np.random.choice(values, 1)[0] for page, values in art_cat.items() if page in graph.nodes }
+
+# overwrite categories
+categories = defaultdict(list)
+for page, category in page_category.items():
+    categories[category].append(page)
+
+
 # get ordered page_names
 page_names = list()
 for line in open('wiki-topcats-page-names.txt', 'r').readlines():
     i = line.index(' ')
     page_names.append(line[i+1:].replace('\n', ''))
 
+
+inverted_page_names = dict()
+for index, name in enumerate(page_names):
+    inverted_page_names[name] = index
 
 #------------------------ RQ2 -----------------------------
 
@@ -61,4 +74,94 @@ def exploring(v, d):
 
     return { page_names[i] for i in indices }
 
-print(exploring("Marty O'Brien", 2))
+#print(exploring("Marty O'Brien", 2))
+
+
+#--------------------------RQ4----------------------
+
+
+# finds shortest path between 2 nodes of a graph using BFS
+def bfs_shortest_path(u, v, g):
+    # u: start node
+    # v: goal node
+    # g: graph
+    
+    # keep track of explored nodes
+    explored = []
+    # keep track of all the paths to be checked
+    queue = [[u]]
+ 
+    # return path if start is goal
+    if u == v:
+        return "Exception: u and v are the same node" # no path! the nodes are the same
+ 
+    # keeps looping until all possible paths have been checked
+    while queue:
+        # pop the first path from the queue
+        path = queue.pop(0)
+        # get the last node from the path
+        node = path[-1]
+        if node not in explored:
+            # go through all neighbour nodes, construct a new path and
+            # push it into the queue
+            for neighbour in g.neighbors(node):
+                new_path = list(path)
+                new_path.append(neighbour)
+                queue.append(new_path)
+                # return path if neighbour is goal
+                if neighbour == v:
+                    return new_path
+ 
+            # mark node as explored
+            explored.append(node)
+ 
+    # in case there's no path between the 2 nodes
+    return "Not possible"
+
+
+def my_double_cat_subg(c1, c2, g):
+    # c1: category 1
+    # c2: category 2
+    cat_nodes = set(categories[c1]) | set(categories[c2]) # the set of all possible nodes
+    cat_nodes = cat_nodes & set(g.nodes) # clean the node
+    sg = nx.DiGraph()
+    sg.add_nodes_from((n, g.nodes[n]) for n in cat_nodes)
+    sg.add_edges_from((n, nbr, d) for n, nbrs in g.adj.items() if n in cat_nodes\
+                      for nbr, d in nbrs.items() if nbr in cat_nodes)
+    return sg
+
+
+def max_flow(source, sink, g):
+    """returns max_flow between two nodes
+
+    Args:
+        source (int): starting node
+        sink (int): end node
+        g (networkx graph): graph
+    """
+    max_flow = 0
+    path = bfs_shortest_path(source, sink, g)
+    
+    while not isinstance(path, str):
+        for i in range(1, len(path)):
+            g.remove_edge(path[i-1], path[i])
+        max_flow += 1
+        path = bfs_shortest_path(source,sink,g)
+    
+    return max_flow
+
+# u = inverted_page_names['Zoe Saldana']
+# v = inverted_page_names['The Matrix']
+# print(max_flow(u,v,graph))
+
+cat_1 = 'Southampton F.C. players'
+cat_2 = 'English footballers'
+sg = my_double_cat_subg('Southampton F.C. players','English footballers', graph)
+u = random.choice(categories[cat_1])
+v = random.choice(categories[cat_2])
+
+print(max_flow(u,v,sg))
+
+
+
+
