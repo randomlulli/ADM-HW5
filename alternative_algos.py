@@ -53,9 +53,11 @@ inverted_page_names = dict()
 for index, name in enumerate(page_names):
     inverted_page_names[name] = index
 
+
 #------------------------ RQ2 -----------------------------
 
-def exploring(v, d):
+
+def exploring(v, d, page_names):
     """Takes a page name and the number of clicks, returns all the pages that are reachable within those number of clicks
 
     Args:
@@ -136,7 +138,7 @@ def my_double_cat_subg(c1, c2, g):
 
 
 def max_flow(source, sink, g):
-    """returns max_flow between two nodes
+    """returns the max flow between two nodes, which is equal to the minimum cut
 
     Args:
         source (int): starting node
@@ -145,11 +147,13 @@ def max_flow(source, sink, g):
     """
     max_flow = 0
     path = bfs_shortest_path(source, sink, g)
-    
+
+    # while there is a path
     while not isinstance(path, str):
         for i in range(1, len(path)):
             g.remove_edge(path[i-1], path[i])
         max_flow += 1
+        # search new path
         path = bfs_shortest_path(source,sink,g)
     
     return max_flow
@@ -202,6 +206,7 @@ def compute_node_distances(u, g):
             if neighbour not in explored:
                 explored[neighbour] = explored[node] + 1
                 queue.append(neighbour)
+    
     return explored
 
 
@@ -237,21 +242,26 @@ def sort_categories_by_distance(c, categories, graph):
         [list of tuple]: sorted categories and their distance
                          e.g. [(cat2, 3), (cat3, 5)]
     """
-    other_cat = categories.copy()
-    del other_cat[c]
-    distances = compute_all_nodes_distances(categories[c], graph)
+    other_cats = categories.copy()
+    del other_cats[c]
+    # precompute distances for each pair of the first category nodes and the other nodes 
+    all_distances = compute_all_nodes_distances(categories[c], graph)
     medians = []
-
-    for cat in tqdm(other_cat):
-        nodes = categories[cat]
-        my_list = []
-        for node in nodes:
-            for i in categories[c]:
-                if node in distances[i]:
-                    my_list.append(distances[i][node])
+    
+    # iterate over each other category
+    for cat in tqdm(other_cats):
+        other_nodes = categories[cat]
+        cat_distances = []
+        # iterate over each possible pair of nodes
+        for node1 in other_nodes:
+            for node2 in categories[c]:
+                if node1 in all_distances[node2]:
+                    # node is reachable
+                    cat_distances.append(all_distances[node2][node1])
                 else:
-                    my_list.append(float("inf"))
-        medians.append((cat,np.median(np.array(my_list))))
+                    # node is not reachable
+                    cat_distances.append(float("inf"))
+        medians.append((cat,np.median(np.array(cat_distances))))
 
     return sorted(medians, key = lambda x: x[1])
 
