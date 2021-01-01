@@ -80,8 +80,6 @@ def exploring(v, d):
 
     return { page_names[i] for i in indices }
 
-#print(exploring("Marty O'Brien", 2))
-
 
 #--------------------------RQ4----------------------
 
@@ -156,16 +154,9 @@ def max_flow(source, sink, g):
     
     return max_flow
 
-# cat_1 = 'Southampton F.C. players'
-# cat_2 = 'English footballers'
-# # sg = my_double_cat_subg('Southampton F.C. players','English footballers', graph)
-# u = random.choice(categories[cat_1])
-# v = random.choice(categories[cat_2])
-
-#print(max_flow(u,v,graph))
-
 
 #------------------------RQ5-----------------------------
+
 
 def profile(fnc):
 
