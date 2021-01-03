@@ -1,9 +1,32 @@
 import networkx as nx
-from collections import defaultdict
+from collections import defaultdict, deque
 import numpy as np
 import random
 from tqdm import tqdm
 import cProfile, pstats, io, random
+
+
+#---------------HELPER FUNCTIONS------------------
+
+
+def profile(fnc):
+
+    """a decorator that uses Cprofile to profile a function"""
+
+    def inner(*args, **kwargs):
+        
+        pr = cProfile.Profile()
+        pr.enable()
+        retval = fnc (*args, **kwargs)
+        pr.disable()
+        s = io.StringIO()
+        sortby = 'cumulative'
+        ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+        ps.print_stats()
+        print(s.getvalue())
+        return retval
+
+    return inner
 
 
 #---------------PREPROCESSING------------------
@@ -87,16 +110,17 @@ def exploring(v, d, page_names):
 
 
 # finds shortest path between 2 nodes of a graph using BFS
+#@profile
 def bfs_shortest_path(u, v, g):
     # u: start node
     # v: goal node
     # g: graph
     
     # keep track of explored nodes
-    explored = []
+    explored = set()
     # keep track of all the paths to be checked
-    queue = [[u]]
- 
+    queue = deque()
+    queue.append([u])
     # return path if start is goal
     if u == v:
         return "Exception: u and v are the same node" # no path! the nodes are the same
@@ -104,7 +128,7 @@ def bfs_shortest_path(u, v, g):
     # keeps looping until all possible paths have been checked
     while queue:
         # pop the first path from the queue
-        path = queue.pop(0)
+        path = queue.popleft()
         # get the last node from the path
         node = path[-1]
         if node not in explored:
@@ -119,7 +143,7 @@ def bfs_shortest_path(u, v, g):
                     return new_path
  
             # mark node as explored
-            explored.append(node)
+            explored.add(node)
  
     # in case there's no path between the 2 nodes
     return "Not possible"
@@ -136,7 +160,7 @@ def my_double_cat_subg(c1, c2, g):
                       for nbr, d in nbrs.items() if nbr in cat_nodes)
     return sg
 
-
+@profile
 def max_flow(source, sink, g):
     """returns the max flow between two nodes, which is equal to the minimum cut
 
@@ -160,26 +184,6 @@ def max_flow(source, sink, g):
 
 
 #------------------------RQ5-----------------------------
-
-
-def profile(fnc):
-
-    """a decorator that uses Cprofile to profile a function"""
-
-    def inner(*args, **kwargs):
-        
-        pr = cProfile.Profile()
-        pr.enable()
-        retval = fnc (*args, **kwargs)
-        pr.disable()
-        s = io.StringIO()
-        sortby = 'cumulative'
-        ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
-        ps.print_stats()
-        print(s.getvalue())
-        return retval
-
-    return inner
 
 
 def compute_node_distances(u, g):
@@ -273,14 +277,16 @@ if __name__ == "__main__":
     #print(exploring("Marty O'Brien", 2))
 
     # RQ4
-
-    # cat_1 = 'Southampton F.C. players'
-    # cat_2 = 'English footballers'
-    # sg = my_double_cat_subg(cat_1, cat_2, graph)
-    # u = random.choice(categories[cat_1])
-    # v = random.choice(categories[cat_2])
-    # print(max_flow(u,v,graph))
+    print('start')
+    cat_1 = 'Southampton F.C. players'
+    cat_2 = 'English footballers'
+    #sg = my_double_cat_subg(cat_1, cat_2, graph)
+    #u = random.choice(categories[cat_1])
+    #v = random.choice(categories[cat_2])
+    u = 1059989
+    v = 1161925
+    print(max_flow(u,v,graph))
 
     # RQ5
 
-    print(sort_categories_by_distance('English footballers', categories, graph))
+    #print(sort_categories_by_distance('English footballers', categories, graph))
